@@ -11,68 +11,56 @@
 #include "check_info.h"
 #include "param.h"
 #include "Vector.h"
+#include "general_functions.h"
 
 int main (int argc, char** argv){
 
-  std::string data;
   std::string metric;
-
   std::ifstream infile;
   std::ifstream confile;
   std::ofstream outfile;
 
-  int clusters_num;
-  int functions_num;
-  int hash_tables_num;
+  int clusters_num=-1;
+  int functions_num=NUMBER_OF_HASH_FUNCTIONS;
+  int hash_tables_num=NUMBER_OF_HASH_TABLES;
 
   if(check_info_cluster(argc,argv,&infile,&confile,&outfile,&metric)<0)//check parameters
     exit(-1);
     //std::cout << std::setprecision(data.length()) << s << '\n';
 
   std::transform(metric.begin(), metric.end(), metric.begin(), ::tolower); //set all letters to lowercase
-
   if(metric!="euclidean"&&metric!="cosine"){
     print_err(-6);
     return -1;
   }
-////////////////////////////////////////////
-//get everything from the input file and store it in a vector
 
-  coordinate s;
+  int check=0;// if -1 free memory and exit
+
+  //get everything from the input file and store it in a vector then check number of dimensions
   std::vector<Vector*> all_vectors;
-  char *token;
+  read_info(&infile,&all_vectors);
 
-  while(std::getline( infile, data )){
-
-    token = strtok(&data[0u], " ,");
-    std::string id=token;
-
-    Vector* V = new Vector (id);
-    token = strtok(NULL, " ,");
-
-     while( token != NULL ) {
-       coordinate s;
-       sscanf(token, "%Lf", &s);
-       V->add_coordinate(s);
-       token = strtok(NULL, " ,");
-     }
-     all_vectors.insert (all_vectors.end(), V);
-   }
-   infile.close();
-///////////////////////////////////////
-  
-  std::vector<Vector*>::iterator V_it;
-  V_it=all_vectors.begin();
-  std::vector<coordinate> *coordinates=V_it[0]->get_coordinates();
-  int dimensions=coordinates->size();
-  int vectors=all_vectors.size();
-  std::cout<<dimensions<<"  "<<vectors<<std::endl;
-
-
-
+  //all vectors must have the same dimensions
+  if(check_dimensions(all_vectors)==-1) check=-1;
+  //get everything from the cluster file anc check it
+  if(check_parameters(&confile ,&clusters_num ,&functions_num ,&hash_tables_num )==-1) check=-1;
+  //check if we have more clusters than nesessary(we can change the maximum at param.h)
+  if(check_cluster_num(all_vectors,clusters_num)==-1) check=-1;
+  if(check==-1){//if we found sth wrong we stop
+    for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)
+      delete(it[0]);
+    return -1;
+  }
 
 
 
   for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)
-    delete(it[0]);
+   delete(it[0]);
 }
+/*
+for(int i=0;i<clusters_num;i++){
+  std::cout<<clusters2.at(i)->get_identity()<<std::endl;
+  std::vector<coordinate> *coordinatesss=clusters2.at(i)->get_coordinates();
+}*/
+  //  for(int j=0;j<203;j++)
+  //      std::cout<<coordinatesss->at(j)<<std::endl;
