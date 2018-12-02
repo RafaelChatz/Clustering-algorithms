@@ -37,7 +37,7 @@ void read_info(std::ifstream * infile,std::vector<Vector*> * all_vectors){
 
 }
 
-int check_parameters(std::ifstream * confile,int * clusters_num,int * functions_num,int * hash_tables_num){
+int check_parameters(std::ifstream * confile,int * clusters_num,int * functions_num,int * hash_tables_num,int *Ms,int *probes){
 
   std::string data;
 
@@ -56,7 +56,16 @@ int check_parameters(std::ifstream * confile,int * clusters_num,int * functions_
     else if(data.compare("number_of_hash_tables:")==0){
       *confile>>data;
       *hash_tables_num=std::stoi(data);
-    }else{
+    }
+    else if(data.compare("number_of_probes:")==0){
+      *confile>>data;
+      *probes=std::stoi(data);
+    }
+    else if(data.compare("number_of_vectors:")==0){
+      *confile>>data;
+      *Ms=std::stoi(data);
+    }
+    else{
       *confile>>data;
 
       std::cerr <<"Conf file parameter not recognised.Continue?(Y,N)"<<")"<<std::endl;
@@ -121,87 +130,6 @@ int check_cluster_num(std::vector<Vector*> & all_vectors,int clusters_num){
   return 0;
 }
 
-void k_unique_rand(int n,int m,std::vector<Vector*> & clusters,std::vector<Vector*> & all_vectors){
-
-  std::random_device rd;
-  std::default_random_engine generator(rd());
-  std::uniform_int_distribution<int> distribution(0,2*n);
-  int pos[m];
-  int im = 0;
-
-  for (int in = 0; in < n && im < m; ++in) {
-    int rn = n - in;
-    int rm = m - im;
-    if (distribution(generator) % rn < rm)
-      pos[im++] = in ;
-  }
-
-  for(int i=0;i<m;i++){
-    clusters.insert (clusters.end(), all_vectors.at(pos[i]));
-  }
-}
-
-void k_means_plus_plus(int n,int m,std::vector<Vector*> & clusters,std::vector<Vector*> & all_vectors,std::string & metric){
-
-  Distance **dist= new Distance*[1];
-  dist[0] = new Euclidean();
-
-  std::random_device rd;
-  std::default_random_engine generator(rd());
-  std::uniform_int_distribution<int> distribution_int(0,n);
-  int pos[m];
-
-  long double** distance = new long double*[m-1];
-  for(int i = 0; i < m-1; ++i)
-    distance[i] = new long double[n];
-
-  long double* average_distance = new long double[n];
-
-  pos[0]=distribution_int(generator);
-  clusters.insert (clusters.end(), all_vectors.at(pos[0]));
-
-  for(int j=1;j<m;j++){
-    long double all_distance=0;
-
-    for(int i=0;i<all_vectors.size();i++){
-     average_distance[i]=0;
-      int fl=0;
-      for(int d=0;d<j;d++){
-        if(pos[d]==i){
-          fl=1;
-          break;
-        }
-      }
-
-      distance[j-1][i]=(long double)dist[0]->dist(*clusters.at(j-1),*all_vectors.at(i));
-
-      for(int d=0;d<j;d++)
-        average_distance[i]=average_distance[i] +distance[d][i];
-
-      average_distance[i]=average_distance[i]/(long double)j;
-      all_distance=all_distance+average_distance[i];
-  //    std::cout<<std::setprecision(100)<<(long double)distance[j-1][i]<<std::endl;
-    }
-
-    std::uniform_real_distribution<long double> distribution_real(0.0,(long double)all_distance);
-    long double prob=distribution_real(generator);
-
-    int s;
-    for(s=0;s<all_vectors.size();s++){
-      prob=prob-average_distance[s];
-      if(prob<0.0)
-        break;
-    }
-    pos[j]=s;
-    clusters.insert (clusters.end(), all_vectors.at(s));
-
-  }
-
-  for(int i = 0; i < m-1; ++i)
-    delete [] distance[i];
-  delete [] distance;
-}
-
 long double absolute(long double x){
   if((long double)x<0)
     return -x;
@@ -214,4 +142,9 @@ long double power(long double x,int n){
   for(int i=0;i<n;i++)
     r=r*x;
   return r;
+}
+
+int mod (long long  int a, unsigned long long  int b)
+{
+   return (a%b+b)%b;
 }

@@ -11,27 +11,31 @@ class Distance{
 
   public:
     virtual  void  Nearest_N(std::vector< std::pair <std::string,double> >  & ,std::vector<Vector*> & ,Vector * ) ;
-    virtual  void Range_N(std::vector<std::string > &,std::vector<Vector*> & ,Vector * ,double ) ;
+    virtual  void Range_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double ) ;
+    virtual void Range_bet_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double,long double ) ;
     virtual  long double dist(Vector & ,Vector & );
 };
 
 
-class Euclidean : public Distance{
+class Euclidean_Distance : public Distance{
   public:
     void  Nearest_N(std::vector< std::pair <std::string,double> >  & ,std::vector<Vector*> & ,Vector * ) ;
-    void Range_N(std::vector<std::string > &,std::vector<Vector*> & ,Vector * ,double ) ;
+    void Range_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double ) ;
+    void Range_bet_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double,long double ) ;
+
     long double dist(Vector & ,Vector & );
 
 };
 
-class Cosine : public Distance{
+class Cosine_Distance : public Distance{
 
   private:
     long double cosi(Vector & ,Vector & );
 
   public:
     void  Nearest_N(std::vector< std::pair <std::string,double> >  & ,std::vector<Vector*> & ,Vector * ) ;
-    void Range_N(std::vector<std::string > &,std::vector<Vector*> & ,Vector * ,double ) ;
+    void Range_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double ) ;
+    void Range_bet_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double,long double ) ;
     long double dist(Vector & ,Vector & );
 };
 

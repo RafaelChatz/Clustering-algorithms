@@ -14,10 +14,11 @@
 
 
   void  Distance::Nearest_N(std::vector< std::pair <std::string,double> >  & ,std::vector<Vector*> & ,Vector * ){}
-  void Distance::Range_N(std::vector<std::string > &,std::vector<Vector*> & ,Vector * ,double ) {}
+  void Distance::Range_N(std::vector<Vector*> &,std::vector<Vector*> & ,Vector * ,long double ) {}
   long double Distance::dist(Vector & ,Vector & ){}
+  void Distance::Range_bet_N(std::vector<Vector*> &vr,std::vector<Vector*> & l,Vector * v,long double r1,long double r2) {}
 
-  long double Euclidean::dist(Vector & x,Vector & y){
+  long double Euclidean_Distance::dist(Vector & x,Vector & y){
     long double distance=0.0;
     std::vector<coordinate> *x_coordinates=x.get_coordinates();
     std::vector<coordinate> *y_coordinates=y.get_coordinates();
@@ -30,18 +31,29 @@
     return (long double)std::sqrt((long double)distance);
   }
 
-  void Euclidean::Range_N(std::vector<std::string > &vr,std::vector<Vector*> & l,Vector * v,double r) {
+  void Euclidean_Distance::Range_N(std::vector<Vector*> &vr,std::vector<Vector*> & l,Vector * v,long double r) {
 
     for (int i=0;i<l.size();i++){
       Vector  *s=l.at(i);
-      double distance=dist(*v,*s);
+      long double distance=dist(*v,*s);
       if(distance<r){
-        vr.push_back(s->get_identity()); //add all below r to vector
+        vr.push_back(s); //add all below r to vector
       }
     }
   }
 
-  void Euclidean::Nearest_N(std::vector< std::pair <std::string,double> >  & vr,std::vector<Vector*> & l,Vector * v) {
+  void Euclidean_Distance::Range_bet_N(std::vector<Vector*> &vr,std::vector<Vector*> & l,Vector * v,long double r1,long double r2) {
+
+    for (int i=0;i<l.size();i++){
+      Vector  *s=l.at(i);
+      long double distance=dist(*v,*s);
+      if(distance<r2&&distance>=r1){
+        vr.push_back(s); //add all below r to vector
+      }
+    }
+  }
+
+  void Euclidean_Distance::Nearest_N(std::vector< std::pair <std::string,double> >  & vr,std::vector<Vector*> & l,Vector * v) {
 
     double min=std::numeric_limits<double >::max();
     double distance=0;
@@ -60,37 +72,49 @@
 
   }
 
-
-
   template<typename Iter_T>
   long double vectorNorm(Iter_T first, Iter_T last) {
     return sqrt(std::inner_product(first, last, first, 0.0L));
   }
 
-  long double Cosine::cosi(Vector & x,Vector & y){
+  long double Cosine_Distance::cosi(Vector & x,Vector & y){
     std::vector<coordinate> *x_coordinates=x.get_coordinates();
     std::vector<coordinate> *y_coordinates=y.get_coordinates();
 
     long double x_norm=vectorNorm(x_coordinates->begin(),x_coordinates->end());
     long double y_norm=vectorNorm(y_coordinates->begin(),y_coordinates->end());
+    long double x_y=(long double)(y_norm*x_norm);
+    long double in_pro=(long double)std::inner_product(x_coordinates->begin(), x_coordinates->end(), y_coordinates->begin(), 0.0L);
 
-    return (double)std::inner_product(x_coordinates->begin(), x_coordinates->end(), y_coordinates->begin(), 0.0L)/(x_norm*y_norm);
+    return (long double)in_pro/(x_y);
   }
 
-  long double Cosine::dist(Vector & x,Vector & y){ return 1 - cosi(x,y);}
+  long double Cosine_Distance::dist(Vector & x,Vector & y){ return absolute(1 - cosi(x,y));
+  }
 
-  void Cosine::Range_N(std::vector<std::string > &vr,std::vector<Vector*> & l,Vector * v,double r) {
+  void Cosine_Distance::Range_N(std::vector<Vector*> &vr,std::vector<Vector*> & l,Vector * v,long double r) {
 
     for (int i=0;i<l.size();i++){
       Vector  *s=l.at(i);
-      double distance=dist(*v,*s);
+      long double distance=dist(*v,*s);
       if(distance<r){
-        vr.push_back(s->get_identity());
+        vr.push_back(s);
       }
     }
   }
 
-  void  Cosine::Nearest_N(std::vector< std::pair <std::string,double> >  & vr,std::vector<Vector*> & l,Vector * v) {
+  void Cosine_Distance::Range_bet_N(std::vector<Vector*> &vr,std::vector<Vector*> & l,Vector * v,long double r1,long double r2) {
+
+    for (int i=0;i<l.size();i++){
+      Vector  *s=l.at(i);
+      long double distance=dist(*v,*s);
+
+      if(distance<=r2&&distance>=r1){
+        vr.push_back(s); //add all below r to vector
+      }
+    }
+  }
+  void  Cosine_Distance::Nearest_N(std::vector< std::pair <std::string,double> >  & vr,std::vector<Vector*> & l,Vector * v) {
 
     double min=std::numeric_limits<double >::max();
     double distance=0;

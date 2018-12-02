@@ -12,6 +12,7 @@
 #include "param.h"
 #include "Vector.h"
 #include "general_functions.h"
+#include "Cluster_Group.h"
 
 int main (int argc, char** argv){
 
@@ -23,6 +24,8 @@ int main (int argc, char** argv){
   int clusters_num=-1;
   int functions_num=NUMBER_OF_HASH_FUNCTIONS;
   int hash_tables_num=NUMBER_OF_HASH_TABLES;
+  int Ms=NUMBER_OF_VECTORS;
+  int probes=PROBES;
 
   if(check_info_cluster(argc,argv,&infile,&confile,&outfile,&metric)<0)//check parameters
     exit(-1);
@@ -39,11 +42,10 @@ int main (int argc, char** argv){
   //get everything from the input file and store it in a vector then check number of dimensions
   std::vector<Vector*> all_vectors;
   read_info(&infile,&all_vectors);
-
   //all vectors must have the same dimensions
   if(check_dimensions(all_vectors)==-1) check=-1;
   //get everything from the cluster file anc check it
-  if(check_parameters(&confile ,&clusters_num ,&functions_num ,&hash_tables_num )==-1) check=-1;
+  if(check_parameters(&confile ,&clusters_num ,&functions_num ,&hash_tables_num,&Ms,&probes )==-1) check=-1;
   //check if we have more clusters than nesessary(we can change the maximum at param.h)
   if(check_cluster_num(all_vectors,clusters_num)==-1) check=-1;
   if(check==-1){//if we found sth wrong we stop
@@ -53,9 +55,20 @@ int main (int argc, char** argv){
   }
 
 
+  Cluster_Group *Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+ //Clusters->Lloyd_assignment(all_vectors);
+ // Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+
+//  for(int i=0;i<clusters_num;i++)
+//    std::cout<<Clusters->get_centroid_id_n(i)<<std::endl;
 
   for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)
    delete(it[0]);
+
+  delete Clusters;
+
 }
 /*
 for(int i=0;i<clusters_num;i++){
