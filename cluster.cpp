@@ -53,27 +53,89 @@ int main (int argc, char** argv){
       delete(it[0]);
     return -1;
   }
+  //Clusters->k_means_average_init(all_vectors);
 
+  Cluster_Group *Clusters;
 
-  Cluster_Group *Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
- //Clusters->Lloyd_assignment(all_vectors);
- // Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
-  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
-
-//  for(int i=0;i<clusters_num;i++)
-//    std::cout<<Clusters->get_centroid_id_n(i)<<std::endl;
-
-  for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)
-   delete(it[0]);
-
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->k_means_update();
   delete Clusters;
 
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->k_means_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->k_means_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_unique_rand_init(all_vectors);
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->k_means_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->k_means_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->k_means_update();
+  delete Clusters;
+
+  Clusters= new Cluster_Group(clusters_num,metric);
+  Clusters->k_means_plus_plus_init(all_vectors);
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->PAM_improvement_update();
+  delete Clusters;
+
+
+
+  for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)
+   delete it[0];
+
+  infile.close();
+  confile.close();
+  outfile.close();
 }
-/*
-for(int i=0;i<clusters_num;i++){
-  std::cout<<clusters2.at(i)->get_identity()<<std::endl;
-  std::vector<coordinate> *coordinatesss=clusters2.at(i)->get_coordinates();
-}*/
-  //  for(int j=0;j<203;j++)
-  //      std::cout<<coordinatesss->at(j)<<std::endl;

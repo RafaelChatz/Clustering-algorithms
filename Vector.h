@@ -13,6 +13,7 @@ class Vector {
    Vector(std::string );
    ~Vector(void);
    void add_coordinate(coordinate );
+
    std::string get_identity(void);
    std::vector<coordinate> *get_coordinates(void);
 };

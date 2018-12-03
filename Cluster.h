@@ -11,18 +11,18 @@
 class Cluster{
 
   Vector * Centroid;
+  std::vector<Vector *>  Vectors_in_Cluster;
 
   public:
-    std::vector<Vector *>  Vectors_in_Cluster;
 
     Cluster(Vector *);
     ~Cluster();
     void add_Vector(Vector *);
     void add_Vectors(std::vector<Vector *> &);
-
-    void update_Centroid();
+    int update_Centroid(Vector * );
     Vector * get_centroid();
     std::string get_centroid_id();
+    std::vector<Vector *> * get_cluster_vectors();
 };
 
 #endif

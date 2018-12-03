@@ -33,17 +33,16 @@ Euclidean::Euclidean(int w,int dimensions){
   int max=INT_MAX;
 
   std::random_device rd;     // only used once to initialise (seed) engine
-  std::mt19937 generator(rd());    // random-number engine used (Mersenne-Twister in this case)
 
   std::normal_distribution<double> distribution_normal(0.0,1.0);
   std::uniform_real_distribution<long double> distribution_uniform(0.0,(double)w);
 
-  t=distribution_uniform(generator);
+  t=distribution_uniform(rd);
 
   this->w=w;
 
   for(int j=0;j<dimensions;j++)
-    vector_V.insert (vector_V.end(),distribution_normal(generator));
+    vector_V.insert (vector_V.end(),distribution_normal(rd));
 
     bytes_allocated+=sizeof(Vector)+128*sizeof(coordinate);
 
@@ -68,12 +67,10 @@ Cosine::Cosine(int dimensions){
   bytes_allocated+=sizeof(Cosine);
 
   std::random_device rd;     // only used once to initialise (seed) engine
-  std::mt19937 generator(rd());    // random-number engine used (Mersenne-Twister in this case)
   srand (time(NULL));
   std::normal_distribution<long double> distribution_normal(0.0,1.0);
-  //std::default_random_engine generator;
   for(int j=0;j<dimensions;j++)
-    vector_R.insert (vector_R.end(),distribution_normal(generator));
+    vector_R.insert (vector_R.end(),distribution_normal(rd));
 
     bytes_allocated+=sizeof(Vector)+128*sizeof(coordinate);
 

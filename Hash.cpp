@@ -61,11 +61,10 @@ bytes_allocated+=sizeof(Euclidean_Hash);
   int max=std::numeric_limits<int >::max();
 
   std::random_device rd;     // only used once to initialise (seed) engine
-  std::mt19937 generator(rd());    // random-number engine used (Mersenne-Twister in this case)
 
   std::uniform_int_distribution<int> random(min,max);
   for(int i=0;i<k;i++)
-    r[i]=random(generator);
+    r[i]=random(rd);
   for(int i = 0; i < k; i += 1){
     H_vec = new Euclidean(W,dimensions);
     H_vector.push_back(H_vec);
@@ -209,7 +208,6 @@ void Cube_Hash::insert_Vector(Vector* v){
 
 int Cube_Hash::hashFunction(Vector *v){
   std::random_device rd;
-  std::mt19937 generator(rd());
   std::uniform_int_distribution<int> random(0,1);
   srand (time(NULL));
   int s=0;
@@ -219,7 +217,7 @@ int Cube_Hash::hashFunction(Vector *v){
     std::unordered_map<double,int>::const_iterator got = h_map.find (value);
 
     if ( got == h_map.end() ){
-      int ran=random(generator);
+      int ran=random(rd);
       std::pair<double,int> h (value,ran);
 
       h_map.insert (h); //add it to the map

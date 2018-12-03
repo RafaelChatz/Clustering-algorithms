@@ -15,6 +15,8 @@ class Cluster_Group{
   int Cluster_num;
   std::string metric;
   Distance **dist;
+  void Silhouette(int);
+
 public:
   Cluster_Group(int,std::string & );
   ~Cluster_Group();
@@ -25,8 +27,10 @@ public:
   void Lloyd_assignment(std::vector<Vector*> &);
   void Range_search_assignment_LSH(std::vector<Vector*> &, int ,int );
   void Range_search_assignment_Hypercube(std::vector<Vector*> &,int,int,int);
-
+  int k_means_update();
+  int PAM_improvement_update();
   std::string get_centroid_id_n(int );
+  void print_info();
 };
 
 

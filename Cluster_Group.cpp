@@ -8,6 +8,8 @@
 #include <iomanip>      // std::setprecision>
 #include <limits>
 #include <unordered_set>
+#include <utility>
+#include <functional>
 
 #include "Cluster.h"
 #include "Cluster_Group.h"
@@ -38,8 +40,9 @@ void Cluster_Group::k_unique_rand_init(std::vector<Vector*> & all_vectors){
 
   int n=all_vectors.size();
 
+
+
   std::random_device rd;
-  std::default_random_engine generator(rd());
   std::uniform_int_distribution<int> distribution(0,2*n);
   int pos[Cluster_num];
   int im = 0;
@@ -47,7 +50,7 @@ void Cluster_Group::k_unique_rand_init(std::vector<Vector*> & all_vectors){
   for (int in = 0; in < n && im < Cluster_num; ++in) {
     int rn = n - in;
     int rm = Cluster_num - im;
-    if (distribution(generator) % rn < rm)
+    if (distribution(rd) % rn < rm)
       pos[im++] = in ;
   }
 
@@ -62,7 +65,6 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
   int n=all_vectors.size();
 
   std::random_device rd;
-  std::default_random_engine generator(rd());
   std::uniform_int_distribution<int> distribution_int(0,n);
   int pos[Cluster_num];
 
@@ -72,7 +74,7 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
 
   long double* average_distance = new long double[n];
 
-  pos[0]=distribution_int(generator);
+  pos[0]=distribution_int(rd);
 
   Cluster * Cl1= new Cluster (all_vectors.at(pos[0]));
   cluster_group.insert (cluster_group.end(), Cl1);
@@ -102,7 +104,7 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
     }
 
     std::uniform_real_distribution<long double> distribution_real(0.0,(long double)all_distance);
-    long double prob=distribution_real(generator);
+    long double prob=distribution_real(rd);
 
     int s;
     for(s=0;s<all_vectors.size();s++){
@@ -127,7 +129,6 @@ void Cluster_Group::k_means_plus_plus_init(std::vector<Vector*> & all_vectors){
   int n=all_vectors.size();
 
   std::random_device rd;
-  std::default_random_engine generator(rd());
   std::uniform_int_distribution<int> distribution_int(0,n);
   int pos[Cluster_num];
 
@@ -137,7 +138,7 @@ void Cluster_Group::k_means_plus_plus_init(std::vector<Vector*> & all_vectors){
 
   long double* nearest_distance = new long double[n];
 
-  pos[0]=distribution_int(generator);
+  pos[0]=distribution_int(rd);
 
   Cluster * Cl1= new Cluster (all_vectors.at(pos[0]));
   cluster_group.insert (cluster_group.end(), Cl1);
@@ -169,7 +170,7 @@ void Cluster_Group::k_means_plus_plus_init(std::vector<Vector*> & all_vectors){
     }
 
     std::uniform_real_distribution<long double> distribution_real(0.0,(long double)all_distance);
-    long double prob=distribution_real(generator);
+    long double prob=distribution_real(rd);
 
     int s;
     for(s=0;s<all_vectors.size();s++){
@@ -213,9 +214,9 @@ void Cluster_Group::Lloyd_assignment(std::vector<Vector*> & all_vectors){
         cluster_group.at(pos)->add_Vector(all_vectors.at(i));
     }
 
-    for(int j=0;j<cluster_group.size();j++){
-      std::cout<<cluster_group.at(j)->Vectors_in_Cluster.size()<<std::endl;
-    }
+  //  for(int j=0;j<cluster_group.size();j++){
+  //    std::cout<<cluster_group.at(j)->Vectors_in_Cluster.size()<<std::endl;
+  //  }
 
 }
 
@@ -397,7 +398,7 @@ void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all
 
   if(cluster_group.size()<1)
     return ;
-    
+
     int dimensions=all_vectors.at(0)->get_coordinates()->size();
     int vectors=all_vectors.size();
 
@@ -564,6 +565,146 @@ void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all
     delete[]  fln;
 }
 
+int Cluster_Group::k_means_update(){
+
+  int r=0;
+  for(int i=0;i<cluster_group.size();i++){
+
+    std::string id="CL"+std::to_string(i);
+    Vector* Cl = new Vector (id);
+    r=r+cluster_group.at(i)->update_Centroid(Cl);
+  }
+
+  return r;
+}
+
+int Cluster_Group::PAM_improvement_update(){
+
+  int changes=0;
+  std::unordered_map<std::string,long double> distances;
+
+  for(int i=0;i<cluster_group.size();i++){
+
+    std::vector<Vector *> * cluster_vectors=cluster_group.at(i)->get_cluster_vectors();
+    Vector * cen=cluster_group.at(i)->get_centroid();
+    long double min=0;
+    int pos=-1;
+    for(int j=0;j<cluster_vectors->size();j++){
+      long double d=(long double)dist[0]->dist(*cen,*cluster_vectors->at(j));
+      std::string idd="C"+std::to_string(j);
+      distances.insert (std::make_pair(idd,d));
+      min=min+d;
+    }
+    std::unordered_map<std::string,long double>::const_iterator got ;
+    for(int j=0;j<cluster_vectors->size();j++){
+      std::string idd="C"+std::to_string(j);
+      long double pos_min=0;
+
+      got=distances.find(idd);
+      if ( got != distances.end() )
+        pos_min=got->second;
+
+      for(int k=0;k<cluster_vectors->size();k++){
+        if(j==k)
+          continue;
+
+          if(j<k){
+            idd=std::to_string(j)+std::to_string(k);
+          }
+          else{
+            idd=std::to_string(k)+std::to_string(j);
+          }
+          got=distances.find(idd);
+          if ( got != distances.end() )
+            pos_min=pos_min+got->second;
+          else{
+            long double d=(long double)dist[0]->dist(*cen,*cluster_vectors->at(j));
+            distances.insert (std::make_pair(idd,d));
+
+            pos_min=pos_min+d;
+          }
+      }
+
+      if(pos_min<min){
+        min=pos_min;
+        pos=j;
+      }
+    }
+    if(pos!=-1){
+      changes++;
+      cluster_group.at(i)->update_Centroid(cluster_vectors->at(pos));
+    }
+
+
+  }
+
+  return changes;
+}
+
+void Cluster_Group::Silhouette(int cl_n){
+
+  long double a=0;
+  long double b=0;
+
+  std::vector<Vector *> * cluster_vectors=cluster_group.at(cl_n)->get_cluster_vectors();
+  std::unordered_map<std::string,long double> distances;
+  std::string idd;
+  for(int i=0;i<cluster_vectors->size();i++){
+
+    for(int j=0;j<cluster_vectors->size();j++){
+      if(i<j){
+        idd=std::to_string(i)+std::to_string(j);
+      }
+      else if(i>j){
+        idd=std::to_string(j)+std::to_string(i);
+      }else
+        continue;
+
+      std::unordered_map<std::string,long double>::const_iterator got ;
+
+      got=distances.find(idd);
+      if ( got != distances.end() )
+        a=a+got->second;
+      else{
+        long double d=(long double)dist[0]->dist(*cluster_vectors->at(i),*cluster_vectors->at(j));
+        distances.insert (std::make_pair(idd,d));
+        a=a+d;
+      }
+
+    }
+
+    a=a/cluster_vectors->size();
+    int ncl=0;
+    long double ndist=std::numeric_limits<long double >::max();
+
+    for(int j=0;j<cluster_group.size();j++){
+      if(j==cl_n)
+      continue;
+      long double di=(long double)dist[0]->dist(*cluster_vectors->at(i),*cluster_group.at(j)->get_centroid());
+
+      if(di<ndist){
+        ncl=j;
+        di=ndist;
+      }
+
+    }
+
+    std::vector<Vector *> * cluster_vectors_b=cluster_group.at(ncl)->get_cluster_vectors();
+    for(int j=0;j<cluster_vectors_b->size();j++){
+      b=b+(long double)dist[0]->dist(*cluster_vectors->at(i),*cluster_vectors_b->at(j));
+    }
+    b=b/cluster_vectors_b->size();
+
+std::cout<<(b-a)/std::max(a,b)<<std::endl;
+  }
+
+
+}
+
+void Cluster_Group::print_info(){
+
+    Silhouette(0);
+}
 
 std::string Cluster_Group::get_centroid_id_n(int n){
 
