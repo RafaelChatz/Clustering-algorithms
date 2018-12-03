@@ -7,6 +7,7 @@
 #include <limits>
 #include <iomanip>      // std::setprecision
 #include <algorithm>
+#include <chrono>
 
 #include "check_info.h"
 #include "param.h"
@@ -53,83 +54,233 @@ int main (int argc, char** argv){
       delete(it[0]);
     return -1;
   }
-  //Clusters->k_means_average_init(all_vectors);
-
+  double atime=0;
   Cluster_Group *Clusters;
 
   Clusters= new Cluster_Group(clusters_num,metric);
+  outfile<<"Algorithm: Ι1A1U1 "<<std::endl;
+  outfile<<"Metric:  "<<metric<<std::endl;
+  auto start = std::chrono::high_resolution_clock::now();
   Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Lloyd_assignment(all_vectors);
-  Clusters->k_means_update();
-  delete Clusters;
 
+  for(int i=0;i<NUM_TIMES;i++){
+    Clusters->Lloyd_assignment(all_vectors);
+    if(Clusters->k_means_update()==0)
+      break;
+  }
+//  Clusters->Lloyd_assignment(all_vectors);
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+  atime=(double)duration.count()/1000000;
+  Clusters->print_info(&outfile,atime);
+  delete Clusters;
+///////////////////////////////////////////
   Clusters= new Cluster_Group(clusters_num,metric);
+  outfile<<"Algorithm: Ι1A1U2 "<<std::endl;
+  outfile<<"Metric:  "<<metric<<std::endl;
+  start = std::chrono::high_resolution_clock::now();
   Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Lloyd_assignment(all_vectors);
-  Clusters->PAM_improvement_update();
-  delete Clusters;
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
-  Clusters->k_means_update();
-  delete Clusters;
+  for(int i=0;i<NUM_TIMES;i++){
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
-  Clusters->PAM_improvement_update();
-  delete Clusters;
-
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
-  Clusters->k_means_update();
-  delete Clusters;
-
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_unique_rand_init(all_vectors);
-  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
-  Clusters->PAM_improvement_update();
-  delete Clusters;
-
-
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
-  Clusters->Lloyd_assignment(all_vectors);
-  Clusters->k_means_update();
-  delete Clusters;
-
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
   Clusters->Lloyd_assignment(all_vectors);
   Clusters->PAM_improvement_update();
+  }
+  //  Clusters->Lloyd_assignment(all_vectors);
+  stop = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+  atime=(double)duration.count()/1000000;
+  Clusters->print_info(&outfile,atime);
   delete Clusters;
+//////////////////////////////////////////
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι1A2U1 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_unique_rand_init(all_vectors);
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
+for(int i=0;i<NUM_TIMES;i++){
+
   Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
   Clusters->k_means_update();
-  delete Clusters;
+}
+//   Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι1A2U2 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_unique_rand_init(all_vectors);
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
+for(int i=0;i<NUM_TIMES;i++){
+
   Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
   Clusters->PAM_improvement_update();
-  delete Clusters;
+}
+//   Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι1A3U1 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_unique_rand_init(all_vectors);
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
+for(int i=0;i<NUM_TIMES;i++){
+
   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
   Clusters->k_means_update();
-  delete Clusters;
+}
+//   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
 
-  Clusters= new Cluster_Group(clusters_num,metric);
-  Clusters->k_means_plus_plus_init(all_vectors);
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι1A3U2 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_unique_rand_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
   Clusters->PAM_improvement_update();
-  delete Clusters;
+}
+//   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
 
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A1U1 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->k_means_update();
+}
+//   Clusters->Lloyd_assignment(all_vectors);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+
+
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A1U2 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Lloyd_assignment(all_vectors);
+  Clusters->PAM_improvement_update();
+}
+//   Clusters->Lloyd_assignment(all_vectors);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A2U1 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->k_means_update();
+}
+//     Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A2U2 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+  Clusters->PAM_improvement_update();
+}
+//     Clusters->Range_search_assignment_LSH(all_vectors,2,functions_num);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A3U1 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->k_means_update();
+}
+//   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
+
+Clusters= new Cluster_Group(clusters_num,metric);
+outfile<<"Algorithm: Ι2A3U2 "<<std::endl;
+outfile<<"Metric:  "<<metric<<std::endl;
+start = std::chrono::high_resolution_clock::now();
+Clusters->k_means_plus_plus_init(all_vectors);
+
+for(int i=0;i<NUM_TIMES;i++){
+
+  Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+  Clusters->PAM_improvement_update();
+}
+//   Clusters->Range_search_assignment_Hypercube(all_vectors,functions_num,Ms,probes);
+stop = std::chrono::high_resolution_clock::now();
+duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);//
+atime=(double)duration.count()/1000000;
+Clusters->print_info(&outfile,atime);
+delete Clusters;
+//////////////////////////////////////////
 
 
   for (std::vector<Vector*>::iterator it=all_vectors.begin(); it<all_vectors.end(); it++)

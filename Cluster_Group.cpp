@@ -40,14 +40,12 @@ void Cluster_Group::k_unique_rand_init(std::vector<Vector*> & all_vectors){
 
   int n=all_vectors.size();
 
-
-
   std::random_device rd;
   std::uniform_int_distribution<int> distribution(0,2*n);
   int pos[Cluster_num];
   int im = 0;
 
-  for (int in = 0; in < n && im < Cluster_num; ++in) {
+  for (int in = 0; in < n && im < Cluster_num; ++in) { //take unique random numbers that corespond to the location in the vector
     int rn = n - in;
     int rm = Cluster_num - im;
     if (distribution(rd) % rn < rm)
@@ -56,12 +54,12 @@ void Cluster_Group::k_unique_rand_init(std::vector<Vector*> & all_vectors){
 
   for(int i=0;i<Cluster_num;i++){
     Cluster * Cl= new Cluster (all_vectors.at(pos[i]));
-    cluster_group.insert (cluster_group.end(), Cl);
+    cluster_group.insert (cluster_group.end(), Cl); //and add them as centroids in each cluster
   }
 }
 
 void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
-
+//extra algorithm
   int n=all_vectors.size();
 
   std::random_device rd;
@@ -74,11 +72,11 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
 
   long double* average_distance = new long double[n];
 
-  pos[0]=distribution_int(rd);
+  pos[0]=distribution_int(rd); //take 1 centroid at random
 
   Cluster * Cl1= new Cluster (all_vectors.at(pos[0]));
   cluster_group.insert (cluster_group.end(), Cl1);
-
+  //find average distance for all vectors from every centroid to find the propability
   for(int j=1;j<Cluster_num;j++){
     long double all_distance=0;
 
@@ -100,7 +98,7 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
         average_distance[i]=average_distance[i] +distance[d][i];
 
       average_distance[i]=average_distance[i]/(long double)j;
-      all_distance=all_distance+average_distance[i];
+      all_distance=all_distance+average_distance[i]; //sum of avergae distances
     }
 
     std::uniform_real_distribution<long double> distribution_real(0.0,(long double)all_distance);
@@ -108,7 +106,7 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
 
     int s;
     for(s=0;s<all_vectors.size();s++){
-      prob=prob-average_distance[s];
+      prob=prob-average_distance[s];//take the one that makes the propability below 0
       if(prob<0.0)
         break;
     }
@@ -125,7 +123,7 @@ void Cluster_Group::k_means_average_init(std::vector<Vector*> & all_vectors){
 }
 
 void Cluster_Group::k_means_plus_plus_init(std::vector<Vector*> & all_vectors){
-
+//the same as above only this time we use the distance that k-means_plus_plus requires for the propability
   int n=all_vectors.size();
 
   std::random_device rd;
@@ -193,12 +191,16 @@ void Cluster_Group::k_means_plus_plus_init(std::vector<Vector*> & all_vectors){
 
 void Cluster_Group::Lloyd_assignment(std::vector<Vector*> & all_vectors){
 
+  for(int i=0;i<cluster_group.size();i++){ //make sure that cluster has no vectors before assignment
+    cluster_group.at(i)->empty_vectors_in_cluster();
+  }
+
   if(cluster_group.size()<1)
     return ;
     for(int i=0;i<all_vectors.size();i++){
       int pos;
       long double min_distance=std::numeric_limits<long double >::max();
-      for(int j=0;j<cluster_group.size();j++){
+      for(int j=0;j<cluster_group.size();j++){//find min distance
         if(!cluster_group.at(j)->get_centroid_id().compare(all_vectors.at(i)->get_identity())){
           pos=-1;
           break;
@@ -210,17 +212,18 @@ void Cluster_Group::Lloyd_assignment(std::vector<Vector*> & all_vectors){
         }
       }
 
-      if(pos!=-1)
+      if(pos!=-1) //if vector is not a centroid  assign vector to the  cluster
         cluster_group.at(pos)->add_Vector(all_vectors.at(i));
     }
 
-  //  for(int j=0;j<cluster_group.size();j++){
-  //    std::cout<<cluster_group.at(j)->Vectors_in_Cluster.size()<<std::endl;
-  //  }
 
 }
 
 void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vectors, int L,int k){
+
+  for(int i=0;i<cluster_group.size();i++){
+    cluster_group.at(i)->empty_vectors_in_cluster();
+  }
 
   if(cluster_group.size()<1)
     return ;
@@ -230,7 +233,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
 
   Hash **h_tables= new Hash*[L];
 
-  if(metric.compare("euclidean")==0){
+  if(metric.compare("euclidean")==0){ //hashing according to the metric
     for(int j=0 ; j<L ; j++)
        h_tables[j] = new Euclidean_Hash(vectors/TABLE_DIV,k,dimensions);
   }else{
@@ -238,7 +241,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
        h_tables[j] = new Cosine_Hash(k,dimensions);
   }
 
-  for(int i = 0; i < all_vectors.size(); i ++) {
+  for(int i = 0; i < all_vectors.size(); i ++) { //add to the hash table everything but the centroids
     int fl=0;
     for(int j=0;j<cluster_group.size();j++)
       if(all_vectors[i]->get_identity().compare(cluster_group[j]->get_centroid()->get_identity())==0){
@@ -261,24 +264,24 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
       if(range<minimum_range)
         minimum_range=range;
     }
-  }
+  }//find minimum distance beetwen centroids
 
 
   std::vector<Vector*> *Vectors_passed = new std::vector<Vector*>[cluster_group.size()];
 
 
-  if(metric.compare("euclidean")==0){
+  if(metric.compare("euclidean")==0){//take bucket and use g to fine evey vector that we need to check with range assignment
   for(int i=0;i<cluster_group.size();i++)
     for(int j=0 ; j<L ; j++){
       std::vector<Vector*> * similar_Vectors=h_tables[j]->get_similar_Vectors(cluster_group.at(i)->get_centroid()); //get similar vectos from the hash function
-      Vector** Vec = similar_Vectors->data();//then we take all the VEctors with the same second hash function
+      Vector** Vec = similar_Vectors->data();
       for(int s=0;s<similar_Vectors->size();s++)
         if(h_tables[j]->g_fun(Vec[s],cluster_group.at(i)->get_centroid()))
           if(std::find(Vectors_passed[i].begin(), Vectors_passed[i].end(), Vec[s]) == Vectors_passed[i].end())
             Vectors_passed[i].push_back(Vec[s]);
     }
   }
-  else{
+  else{//we dont use g for cosine
     for(int i=0;i<cluster_group.size();i++)
       for(int j=0 ; j<L ; j++){
         std::vector<Vector*> * similar_Vectors=h_tables[j]->get_similar_Vectors(cluster_group.at(i)->get_centroid()); //get similar vectos from the hash function
@@ -395,6 +398,10 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
 }
 
 void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all_vectors,int k,int Ms,int probes){
+
+  for(int i=0;i<cluster_group.size();i++){
+    cluster_group.at(i)->empty_vectors_in_cluster();
+  }
 
   if(cluster_group.size()<1)
     return ;
@@ -641,7 +648,7 @@ int Cluster_Group::PAM_improvement_update(){
   return changes;
 }
 
-void Cluster_Group::Silhouette(int cl_n){
+long double Cluster_Group::Silhouette(int cl_n){
 
   long double a=0;
   long double b=0;
@@ -649,6 +656,7 @@ void Cluster_Group::Silhouette(int cl_n){
   std::vector<Vector *> * cluster_vectors=cluster_group.at(cl_n)->get_cluster_vectors();
   std::unordered_map<std::string,long double> distances;
   std::string idd;
+  long double average=0;
   for(int i=0;i<cluster_vectors->size();i++){
 
     for(int j=0;j<cluster_vectors->size();j++){
@@ -695,15 +703,61 @@ void Cluster_Group::Silhouette(int cl_n){
     }
     b=b/cluster_vectors_b->size();
 
-std::cout<<(b-a)/std::max(a,b)<<std::endl;
+    average=average+(b-a)/std::max(a,b);
   }
-
+  return average/cluster_vectors->size();
 
 }
 
-void Cluster_Group::print_info(){
+void Cluster_Group::print_info(std::ofstream *outfile,double atime){
 
-    Silhouette(0);
+  for(int j=0;j<cluster_group.size();j++){
+    std::vector<Vector *> *vec=cluster_group.at(j)->get_cluster_vectors();
+    *outfile<<"CLUSTER- "<<j+1<<" {size: "<<vec->size()+1<<" centroid: ";
+
+    if(cluster_group.at(j)->get_centroid_id().compare(0,2,"CL")==0)
+    {
+      //*outfile<<cluster_group.at(j)->get_centroid_id()<<std::endl;
+      Vector * vcl=cluster_group.at(j)->get_centroid();
+      std::vector<coordinate> * vclc=vcl->get_coordinates();
+      for(int i=0;i<vclc->size();i++){
+        *outfile<< std::setprecision(PRECISION) <<" "<<vclc->at(i);
+      }
+      *outfile<<"}"<<std::endl<<std::endl;
+    }
+    else
+      *outfile<<cluster_group.at(j)->get_centroid_id()<<std::endl<<std::endl;
+
+  }
+  *outfile<<"clustering_time: "<<atime<<std::endl;
+  *outfile<<"Silhouette: [";
+  long double Silhouette_av=0;
+  for(int j=0;j<cluster_group.size();j++){
+    long double Silh=Silhouette(j);
+      *outfile<<Silh<<",";
+      Silhouette_av=Silhouette_av+Silh;
+  }
+  *outfile<<Silhouette_av/(long double)cluster_group.size()<<"]";
+
+  *outfile<<std::endl<<std::endl<<std::endl;
+
+  for(int j=0;j<cluster_group.size();j++){
+    std::vector<Vector *> *vec=cluster_group.at(j)->get_cluster_vectors();
+    *outfile<<"CLUSTER- "<<j+1<<"{";
+    for(int i=0;i<vec->size();i++){
+      if(i==vec->size()-1)
+      {
+        *outfile<<vec->at(i)->get_identity();
+        continue;
+      }
+      *outfile<<vec->at(i)->get_identity()<<",";
+    }
+    *outfile<<"}"<<std::endl;
+
+  }
+
+  *outfile<<"___________________________________________________________________"<<std::endl<<std::endl;
+
 }
 
 std::string Cluster_Group::get_centroid_id_n(int n){

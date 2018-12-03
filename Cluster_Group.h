@@ -15,7 +15,7 @@ class Cluster_Group{
   int Cluster_num;
   std::string metric;
   Distance **dist;
-  void Silhouette(int);
+  long double Silhouette(int);
 
 public:
   Cluster_Group(int,std::string & );
@@ -30,7 +30,7 @@ public:
   int k_means_update();
   int PAM_improvement_update();
   std::string get_centroid_id_n(int );
-  void print_info();
+  void print_info(std::ofstream *,double);
 };
 
 
