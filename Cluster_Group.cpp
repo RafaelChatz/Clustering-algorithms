@@ -296,7 +296,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
     std::vector<Vector*> *vectors_in_range = new std::vector<Vector*>[cluster_group.size()];
     std::unordered_set<Vector*> assigned_Vectors ;
 
-    for(int i=0;i<cluster_group.size();i++){
+    for(int i=0;i<cluster_group.size();i++){//find every vector that appears in more than one cluster and assign it to the nearest
 
       for(int s=0;s<Vectors_passed[i].size();s++){
 
@@ -327,7 +327,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
 
     int *fln= new int [cluster_group.size()];
 
-    for(int i=0;i<cluster_group.size();i++){
+    for(int i=0;i<cluster_group.size();i++){ //assign vectors to clusters with range check
       dist[0]->Range_bet_N(vectors_in_range[i],Vectors_passed[i] ,cluster_group.at(i)->get_centroid(),0,minimum_range/2 ) ;
       fln[i]=vectors_in_range[i].size();
       for(int j=0;j<vectors_in_range[i].size();j++){
@@ -341,9 +341,9 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
     }
 
     int n=1;
-    while(TRUE){
+    while(TRUE){//until there are no more
       int st=0;
-      for(int i=0;i<cluster_group.size();i++){
+      for(int i=0;i<cluster_group.size();i++){ //double the range every time and search for vectors to add to clusters
 
         if(fln[i]>=Vectors_passed[i].size()){
           st++;
@@ -366,7 +366,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
       n++;
     }
 
-    for(int i=0;i<all_vectors.size();i++){
+    for(int i=0;i<all_vectors.size();i++){ //assign everything outside of the bucket with Lloyds
       std::unordered_set<Vector*>::const_iterator got = assigned_Vectors.find (all_vectors.at(i));
       if ( got != assigned_Vectors.end() )
         continue;
@@ -398,7 +398,7 @@ void Cluster_Group::Range_search_assignment_LSH(std::vector<Vector*> & all_vecto
 }
 
 void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all_vectors,int k,int Ms,int probes){
-
+//everything is the same here (the only difference is the probes )
   for(int i=0;i<cluster_group.size();i++){
     cluster_group.at(i)->empty_vectors_in_cluster();
   }
@@ -447,7 +447,7 @@ void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all
     std::unordered_set<Vector*> assigned_Vectors ;
 
 
-    for(int i=0;i<cluster_group.size();i++){
+    for(int i=0;i<cluster_group.size();i++){ //find every vector that we need to check with range search (until we have M or probes are done)
       int bucket=h_tables[0]->hashFunction(cluster_group.at(i)->get_centroid());
       Vectors_passed[i]=*h_tables[0]->get_similar_Vectors(cluster_group.at(i)->get_centroid()); //get similar vectos from the hash function
       int vec_size=Vectors_passed[i].size();
@@ -575,7 +575,7 @@ void Cluster_Group::Range_search_assignment_Hypercube(std::vector<Vector*> & all
 int Cluster_Group::k_means_update(){
 
   int r=0;
-  for(int i=0;i<cluster_group.size();i++){
+  for(int i=0;i<cluster_group.size();i++){ //assign a new centroid to every cluster
 
     std::string id="CL"+std::to_string(i);
     Vector* Cl = new Vector (id);
@@ -588,9 +588,9 @@ int Cluster_Group::k_means_update(){
 int Cluster_Group::PAM_improvement_update(){
 
   int changes=0;
-  std::unordered_map<std::string,long double> distances;
+  std::unordered_map<std::string,long double> distances; //we store distances to a map so we wont have to find them each time
 
-  for(int i=0;i<cluster_group.size();i++){
+  for(int i=0;i<cluster_group.size();i++){//find medoid and use it as centroid
 
     std::vector<Vector *> * cluster_vectors=cluster_group.at(i)->get_cluster_vectors();
     Vector * cen=cluster_group.at(i)->get_centroid();
@@ -632,12 +632,12 @@ int Cluster_Group::PAM_improvement_update(){
           }
       }
 
-      if(pos_min<min){
+      if(pos_min<min){ //position with min  distance
         min=pos_min;
         pos=j;
       }
     }
-    if(pos!=-1){
+    if(pos!=-1){//if not current add the new one
       changes++;
       cluster_group.at(i)->update_Centroid(cluster_vectors->at(pos));
     }
@@ -654,7 +654,8 @@ long double Cluster_Group::Silhouette(int cl_n){
   long double b=0;
 
   std::vector<Vector *> * cluster_vectors=cluster_group.at(cl_n)->get_cluster_vectors();
-  std::unordered_map<std::string,long double> distances;
+  std::unordered_map<std::string,long double> distances;//add only distances found for a
+  //we dont need to do that for b because we wont use them again
   std::string idd;
   long double average=0;
   for(int i=0;i<cluster_vectors->size();i++){
@@ -709,7 +710,7 @@ long double Cluster_Group::Silhouette(int cl_n){
 
 }
 
-void Cluster_Group::print_info(std::ofstream *outfile,double atime){
+void Cluster_Group::print_info(std::ofstream *outfile,double atime){ //print the info in the output file
 
   for(int j=0;j<cluster_group.size();j++){
     std::vector<Vector *> *vec=cluster_group.at(j)->get_cluster_vectors();
